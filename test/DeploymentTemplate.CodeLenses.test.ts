@@ -190,7 +190,7 @@ suite("DeploymentTemplate code lenses", () => {
                 const lens = lenses.find(l => l.parameterDefinition === param);
                 assert(!!lens, `Couldn't find a code lens for parameter ${param.nameValue.unquotedValue}`);
 
-                const result = lens.resolve(dp);
+                const result = await lens.resolve();
                 assert.equal(result, true);
                 assert.equal(lens.command?.command, "azurerm-vscode-tools.codeLens.gotoParameterValue");
                 assert.deepEqual(lens.command?.arguments, [

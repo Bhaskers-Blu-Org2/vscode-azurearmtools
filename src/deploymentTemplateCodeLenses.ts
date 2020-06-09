@@ -4,12 +4,12 @@
 
 // tslint:disable: max-classes-per-file
 
-import * as assert from 'assert';
 import { Language } from '../extension.bundle';
-import { DeploymentDocument, ResolvableCodeLens } from "./DeploymentDocument";
+import { ResolvableCodeLens } from "./DeploymentDocument";
 import { DeploymentTemplate } from './DeploymentTemplate';
+import { ext } from './extensionVariables';
 import { IParameterDefinition } from './IParameterDefinition';
-import { DeploymentParameters } from "./parameterFiles/DeploymentParameters";
+import { IParameterValues } from "./parameterFiles/DeploymentParameters";
 import { getRelativeParameterFilePath } from './parameterFiles/parameterFiles';
 import { TemplateScopeKind } from "./TemplateScope";
 
@@ -21,11 +21,11 @@ export class ShowCurrentParameterFileCodeLens extends ResolvableCodeLens {
         super(dt, span);
     }
 
-    public resolve(associatedDocument: DeploymentDocument | undefined): boolean {
-        if (associatedDocument) {
-            assert(associatedDocument instanceof DeploymentParameters);
+    public async resolve(): Promise<boolean> {
+        const dpUri = ext.deploymentFileMapping.value.getParameterFile(this.deploymentDoc.documentUri);
+        if (dpUri) {
             this.command = {
-                title: `Parameter file: "${getRelativeParameterFilePath(this.deploymentDoc.documentUri, associatedDocument.documentUri)}"`,
+                title: `Parameter file: "${getRelativeParameterFilePath(this.deploymentDoc.documentUri, dpUri)}"`, //asdf
                 command: 'azurerm-vscode-tools.openParameterFile',
                 arguments: [this.deploymentDoc.documentUri]
             };
@@ -44,10 +44,10 @@ export class SelectParameterFileCodeLens extends ResolvableCodeLens {
         super(dt, span);
     }
 
-    public resolve(associatedDocument: DeploymentDocument | undefined): boolean {
+    public async resolve(): Promise<boolean> {
         let title: string;
-        if (associatedDocument) {
-            assert(associatedDocument instanceof DeploymentParameters);
+        const dpUri = ext.deploymentFileMapping.value.getParameterFile(this.deploymentDoc.documentUri);
+        if (dpUri) {
             title = `Change...`;
         } else {
             title = "Select or create a parameter file to enable full validation...";
@@ -67,18 +67,20 @@ export class ParameterDefinitionCodeLens extends ResolvableCodeLens {
     private readonly _maxCharactersInValue: number = 120;
 
     public constructor(
-        dt: DeploymentTemplate,
-        public readonly parameterDefinition: IParameterDefinition
+        dt: DeploymentTemplate, //asdf doc - this is the parent template, not the parent scope //asdf needed?
+        public readonly parameterDefinition: IParameterDefinition,
+        public getParameterValues: () => Promise<IParameterValues | undefined>
     ) {
         super(dt, parameterDefinition.nameValue.span);
     }
 
-    public resolve(associatedDocument: DeploymentDocument | undefined): boolean {
-        if (associatedDocument) {
-            assert(associatedDocument instanceof DeploymentParameters);
-            const dp = associatedDocument as DeploymentParameters;
+    public async resolve(): Promise<boolean> {
+        const parameterValues = await this.getParameterValues();
+        if (parameterValues) {
+            //assert(parameterValues instanceof DeploymentParameters); asdf
+            //const dp = associatedDocument as DeploymentParameters;
 
-            const param = dp.getParameterValue(this.parameterDefinition.nameValue.unquotedValue);
+            const param = parameterValues.getParameterValue(this.parameterDefinition.nameValue.unquotedValue);
             const paramValue = param?.value;
             const paramReference = param?.reference;
             const givenValueAsString = paramValue?.toFullFriendlyString();
@@ -104,7 +106,7 @@ export class ParameterDefinitionCodeLens extends ResolvableCodeLens {
                 title: title,
                 command: "azurerm-vscode-tools.codeLens.gotoParameterValue",
                 arguments: [
-                    dp.documentUri,
+                    parameterValues,
                     this.parameterDefinition.nameValue.unquotedValue
                 ]
             };
@@ -139,7 +141,7 @@ export class NestedTemplateCodeLen extends ResolvableCodeLens {
         }
     }
 
-    public resolve(_associatedDocument: DeploymentDocument | undefined): boolean {
+    public async resolve(): Promise<boolean> {
         // Nothing else to do
         return true;
     }
@@ -162,7 +164,7 @@ export class LinkedTemplateCodeLens extends ResolvableCodeLens {
         return new LinkedTemplateCodeLens(dt, span, "Linked template");
     }
 
-    public resolve(_associatedDocument: DeploymentDocument | undefined): boolean {
+    public async resolve(): Promise<boolean> {
         // Nothing else to do
         return true;
     }
