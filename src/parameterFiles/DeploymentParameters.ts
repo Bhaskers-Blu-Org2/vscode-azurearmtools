@@ -4,7 +4,7 @@
 
 import * as assert from 'assert';
 import { EOL } from "os";
-import { CodeAction, CodeActionContext, CodeActionKind, Command, Range, Selection, TextEditor, Uri } from "vscode";
+import { CodeAction, CodeActionContext, Command, Range, Selection, TextEditor, Uri } from "vscode";
 import { CachedValue } from "../CachedValue";
 import { templateKeys } from "../constants";
 import { DeploymentDocument, ResolvableCodeLens } from "../DeploymentDocument";
@@ -18,14 +18,15 @@ import { ReferenceList } from "../ReferenceList";
 import { isParametersSchema } from "../schemas";
 import { indentMultilineString } from "../util/multilineStrings";
 import { getVSCodePositionFromPosition, getVSCodeRangeFromSpan } from "../util/vscodePosition";
-import { IParameterValues } from './IParameterValues';
+import { IProvideParameterValues } from './IProvideParameterValues';
 import { ParametersPositionContext } from "./ParametersPositionContext";
 import { ParameterValueDefinition } from "./ParameterValueDefinition";
+import { getParameterValuesCodeActions } from "./ParameterValues";
 
 /**
  * Represents a deployment parameter file
  */
-export class DeploymentParameters extends DeploymentDocument implements IParameterValues {
+export class DeploymentParameters extends DeploymentDocument implements IProvideParameterValues {
     private _parameterValueDefinitions: CachedValue<ParameterValueDefinition[]> = new CachedValue<ParameterValueDefinition[]>();
     private _parametersProperty: CachedValue<Json.Property | undefined> = new CachedValue<Json.Property | undefined>();
 
@@ -120,36 +121,49 @@ export class DeploymentParameters extends DeploymentDocument implements IParamet
         const parametersProperty = this.parametersProperty;
 
         if (parametersProperty) {
-            const lineIndex = this.getDocumentPosition(parametersProperty?.nameValue.span.startIndex).line;
-            if (lineIndex >= range.start.line && lineIndex <= range.end.line) {
-                const missingParameters: IParameterDefinition[] = this.getMissingParameters(template, false);
+            if (parametersProperty && template) { //asdf?
+                const lineIndex = this.getDocumentPosition(parametersProperty?.nameValue.span.startIndex).line;
+                if (lineIndex >= range.start.line && lineIndex <= range.end.line) {
 
-                // Add missing required parameters
-                if (missingParameters.some(p => this.isParameterRequired(p))) {
-                    const action = new CodeAction("Add missing required parameters", CodeActionKind.QuickFix);
-                    action.command = {
-                        command: 'azurerm-vscode-tools.codeAction.addMissingRequiredParameters',
-                        title: action.title,
-                        arguments: [
-                            this.documentUri
-                        ]
-                    };
-                    actions.push(action);
-                }
-
-                // Add all missing parameters
-                if (missingParameters.length > 0) {
-                    const action = new CodeAction("Add all missing parameters", CodeActionKind.QuickFix);
-                    action.command = {
-                        command: 'azurerm-vscode-tools.codeAction.addAllMissingParameters',
-                        title: action.title,
-                        arguments: [
-                            this.documentUri
-                        ]
-                    };
-                    actions.push(action);
+                    return getParameterValuesCodeActions(this, template,
+                        template.topLevelScope.parameterDefinitions,
+                        this,
+                        range
+                    );
                 }
             }
+
+            //asdf
+            // const lineIndex = this.getDocumentPosition(parametersProperty?.nameValue.span.startIndex).line;
+            // if (lineIndex >= range.start.line && lineIndex <= range.end.line) {
+            //     const missingParameters: IParameterDefinition[] = template ? getMissingParameters(template.topLevelScope.parameterDefinitions, this, false) : [];//asdf testpoint
+
+            //     // Add missing required parameters
+            //     if (missingParameters.some(p => isParameterRequired(p))) {
+            //         const action = new CodeAction("Add missing required parameters", CodeActionKind.QuickFix);
+            //         action.command = {
+            //             command: 'azurerm-vscode-tools.codeAction.addMissingRequiredParameters',
+            //             title: action.title,
+            //             arguments: [
+            //                 this.documentUri
+            //             ]
+            //         };
+            //         actions.push(action);
+            //     }
+
+            //     // Add all missing parameters
+            //     if (missingParameters.length > 0) {
+            //         const action = new CodeAction("Add all missing parameters", CodeActionKind.QuickFix);
+            //         action.command = {
+            //             command: 'azurerm-vscode-tools.codeAction.addAllMissingParameters',
+            //             title: action.title,
+            //             arguments: [
+            //                 this.documentUri
+            //             ]
+            //         };
+            //         actions.push(action);
+            //     }
+            //}
         }
 
         return actions;

@@ -248,7 +248,7 @@ export class NestedTemplateInnerScope extends TemplateScopeFromObject {
 
     public readonly scopeKind: TemplateScopeKind = TemplateScopeKind.NestedDeploymentWithInnerScope;
 
-    public getParameterValues(): IParameterValues {
+    public getParameterValues(): IParameterValues { //asdf rename?
         return {
             documentUri: this.documentUri,
             //parametersParentDocument: this.deploymentTemplate, //asdf?

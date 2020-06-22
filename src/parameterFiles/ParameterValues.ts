@@ -2,11 +2,11 @@
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 // ----------------------------------------------------------------------------
 
-import { CodeAction, Range, Selection } from "vscode";
-import { CodeActionContext, Command } from "vscode-languageclient";
+import { CodeAction, CodeActionContext, Range, Selection } from "vscode";
+import { Command } from "vscode-languageclient";
 import { DeploymentTemplate } from "../DeploymentTemplate";
 import { IParameterDefinition } from "../IParameterDefinition";
-import { IParameterValues } from "./IParameterValues";
+import { IProvideParameterValues } from "./IProvideParameterValues";
 
 // /** asdf
 //  * Represents a "parameters" object in a deployment template or parameter file
@@ -23,20 +23,20 @@ import { IParameterValues } from "./IParameterValues";
 
 // tslint:disable-next-line: export-name asdf
 export async function getParameterValuesCodeActions(
-    parameterValues: IParameterValues,
+    parameterValues: IProvideParameterValues, //asdf naming seems weird?
     deploymentTemplate: DeploymentTemplate | undefined, //asdf interface?  scope?
-    range: Range | Selection,
+    range: Range | Selection, //asdf what range?
     context: CodeActionContext
 ): Promise<(Command | CodeAction)[]> {
     //asdf const template: DeploymentTemplate | undefined = <DeploymentTemplate | undefined>associatedDocument;
 
     const actions: (Command | CodeAction)[] = [];
     const parametersProperty = parameterValues.parametersProperty;
-
+    asdf working here
     if (parametersProperty) {
         const lineIndex = this.getDocumentPosition(parametersProperty?.nameValue.span.startIndex).line;
         if (lineIndex >= range.start.line && lineIndex <= range.end.line) {
-            const missingParameters: IParameterDefinition[] = this.getMissingParameters(template, false);
+            const missingParameters: IParameterDefinition[] = getMissingParameters(deploymentTemplate.topLevelScope.parameterDefinitions, parameterValues, false);
 
             // Add missing required parameters
             if (missingParameters.some(p => this.isParameterRequired(p))) {
@@ -73,9 +73,9 @@ function isParameterRequired(paramDef: IParameterDefinition): boolean {
     return !paramDef.defaultValue;
 }
 
-function getMissingParameters(
+export function getMissingParameters(
     parameterDefinitions: IParameterDefinition[],
-    parameterValues: IParameterValues,
+    parameterValues: IProvideParameterValues,
     onlyRequiredParameters: boolean
 ): IParameterDefinition[] {
     const results: IParameterDefinition[] = [];
