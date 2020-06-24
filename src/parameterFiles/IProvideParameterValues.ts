@@ -16,6 +16,6 @@ export interface IProvideParameterValues extends IDocumentLocation/*asdf?*/ {
     getParameterValue(parameterName: string): ParameterValueDefinition | undefined;
     parameterValuesDefinitions: ParameterValueDefinition[];
 
-    parametersProperty: Json.Property | undefined;
+    parametersProperty: Json.Property | undefined; //asdf document
     parametersObjectValue: Json.ObjectValue | undefined;
 }

@@ -3,21 +3,16 @@
 // ----------------------------------------------------------------------------
 
 import * as assert from 'assert';
-import { EOL } from "os";
 import { CodeAction, CodeActionContext, Command, Range, Selection, TextEditor, Uri } from "vscode";
 import { CachedValue } from "../CachedValue";
 import { templateKeys } from "../constants";
 import { DeploymentDocument, ResolvableCodeLens } from "../DeploymentDocument";
 import { DeploymentTemplate } from "../DeploymentTemplate";
 import { INamedDefinition } from "../INamedDefinition";
-import { IParameterDefinition } from "../IParameterDefinition";
 import * as Json from "../JSON";
 import * as language from "../Language";
-import { createParameterFromTemplateParameter, defaultTabSize } from "../parameterFileGeneration";
 import { ReferenceList } from "../ReferenceList";
 import { isParametersSchema } from "../schemas";
-import { indentMultilineString } from "../util/multilineStrings";
-import { getVSCodePositionFromPosition, getVSCodeRangeFromSpan } from "../util/vscodePosition";
 import { IProvideParameterValues } from './IProvideParameterValues';
 import { ParametersPositionContext } from "./ParametersPositionContext";
 import { ParameterValueDefinition } from "./ParameterValueDefinition";
@@ -117,56 +112,12 @@ export class DeploymentParameters extends DeploymentDocument implements IProvide
         assert(!associatedDocument || associatedDocument instanceof DeploymentTemplate, "Associated document is of the wrong type");
         const template: DeploymentTemplate | undefined = <DeploymentTemplate | undefined>associatedDocument;
 
-        const actions: (Command | CodeAction)[] = [];
-        const parametersProperty = this.parametersProperty;
-
-        if (parametersProperty) {
-            if (parametersProperty && template) { //asdf?
-                const lineIndex = this.getDocumentPosition(parametersProperty?.nameValue.span.startIndex).line;
-                if (lineIndex >= range.start.line && lineIndex <= range.end.line) {
-
-                    return getParameterValuesCodeActions(this, template,
-                        template.topLevelScope.parameterDefinitions,
-                        this,
-                        range
-                    );
-                }
-            }
-
-            //asdf
-            // const lineIndex = this.getDocumentPosition(parametersProperty?.nameValue.span.startIndex).line;
-            // if (lineIndex >= range.start.line && lineIndex <= range.end.line) {
-            //     const missingParameters: IParameterDefinition[] = template ? getMissingParameters(template.topLevelScope.parameterDefinitions, this, false) : [];//asdf testpoint
-
-            //     // Add missing required parameters
-            //     if (missingParameters.some(p => isParameterRequired(p))) {
-            //         const action = new CodeAction("Add missing required parameters", CodeActionKind.QuickFix);
-            //         action.command = {
-            //             command: 'azurerm-vscode-tools.codeAction.addMissingRequiredParameters',
-            //             title: action.title,
-            //             arguments: [
-            //                 this.documentUri
-            //             ]
-            //         };
-            //         actions.push(action);
-            //     }
-
-            //     // Add all missing parameters
-            //     if (missingParameters.length > 0) {
-            //         const action = new CodeAction("Add all missing parameters", CodeActionKind.QuickFix);
-            //         action.command = {
-            //             command: 'azurerm-vscode-tools.codeAction.addAllMissingParameters',
-            //             title: action.title,
-            //             arguments: [
-            //                 this.documentUri
-            //             ]
-            //         };
-            //         actions.push(action);
-            //     }
-            //}
-        }
-
-        return actions;
+        return getParameterValuesCodeActions(
+            this,
+            template,
+            range,
+            context
+        );
     }
 
     public async addMissingParameters(
@@ -174,74 +125,79 @@ export class DeploymentParameters extends DeploymentDocument implements IProvide
         template: DeploymentTemplate,
         onlyRequiredParameters: boolean
     ): Promise<void> {
-        // Find the location to insert new stuff in the parameters section
-        if (this.parametersProperty && this.parametersObjectValue) {
-            // Where insert?
-            // Find last non-whitespace token inside the parameters section
-            let lastTokenInParameters: Json.Token | undefined;
-            for (let i = this.parametersProperty.span.endIndex - 1; // Start before the closing "}"
-                i >= this.parametersProperty.span.startIndex;
-                --i) {
-                lastTokenInParameters = this.jsonParseResult.getTokenAtCharacterIndex(i, Json.Comments.includeCommentTokens);
-                if (lastTokenInParameters) {
-                    break;
-                }
-            }
-            const insertIndex: number = lastTokenInParameters
-                ? lastTokenInParameters.span.afterEndIndex
-                : this.parametersObjectValue.span.endIndex;
-            const insertPosition = this.getDocumentPosition(insertIndex);
+        //asdf
+        // // Find the location to insert new stuff in the parameters section
+        // if (this.parametersProperty && this.parametersObjectValue) {
+        //     // Where insert?
+        //     // Find last non-whitespace token inside the parameters section
+        //     let lastTokenInParameters: Json.Token | undefined;
+        //     for (let i = this.parametersProperty.span.endIndex - 1; // Start before the closing "}"
+        //         i >= this.parametersProperty.span.startIndex;
+        //         --i) {
+        //         lastTokenInParameters = this.jsonParseResult.getTokenAtCharacterIndex(i, Json.Comments.includeCommentTokens);
+        //         if (lastTokenInParameters) {
+        //             break;
+        //         }
+        //     }
+        //     const insertIndex: number = lastTokenInParameters
+        //         ? lastTokenInParameters.span.afterEndIndex
+        //         : this.parametersObjectValue.span.endIndex;
+        //     const insertPosition = this.getDocumentPosition(insertIndex);
 
-            // Find missing params
-            const missingParams: IParameterDefinition[] = this.getMissingParameters(template, onlyRequiredParameters);
-            if (missingParams.length === 0) {
-                return;
-            }
+        return;
+        // // Find missing params
+        // const missingParams: IParameterDefinition[] = getMissingParameters(
+        //     template.topLevelScope.parameterDefinitions/*asdf*/,
+        //     template.topLevelScope.getpr, //asdf?
+        //     onlyRequiredParameters);
+        // if (missingParams.length === 0) {
+        //     return;
+        // }
 
-            // Create insertion text
-            let paramsAsText: string[] = [];
-            for (let param of missingParams) {
-                const paramText = createParameterFromTemplateParameter(template, param, defaultTabSize);
-                paramsAsText.push(paramText);
-            }
-            let newText = paramsAsText.join(`,${EOL}`);
+        // // Create insertion text
+        // let paramsAsText: string[] = [];
+        // for (let param of missingParams) {
+        //     const paramText = createParameterFromTemplateParameter(template, param, defaultTabSize);
+        //     paramsAsText.push(paramText);
+        // }
+        // let newText = paramsAsText.join(`,${EOL}`);
 
-            // Determine indentation
-            const parametersObjectIndent = this.getDocumentPosition(this.parametersProperty?.nameValue.span.startIndex).column;
-            const lastParameter = this.parameterValuesDefinitions.length > 0 ? this.parameterValuesDefinitions[this.parameterValuesDefinitions.length - 1] : undefined;
-            const lastParameterIndent = lastParameter ? this.getDocumentPosition(lastParameter?.fullSpan.startIndex).column : undefined;
-            const newTextIndent = lastParameterIndent === undefined ? parametersObjectIndent + defaultTabSize : lastParameterIndent;
-            let indentedText = indentMultilineString(newText, newTextIndent);
-            let insertText = EOL + indentedText;
+        // // Determine indentation
+        // const parametersObjectIndent = this.getDocumentPosition(this.parametersProperty?.nameValue.span.startIndex).column;
+        // const lastParameter = this.parameterValuesDefinitions.length > 0 ? this.parameterValuesDefinitions[this.parameterValuesDefinitions.length - 1] : undefined;
+        // const lastParameterIndent = lastParameter ? this.getDocumentPosition(lastParameter?.fullSpan.startIndex).column : undefined;
+        // const newTextIndent = lastParameterIndent === undefined ? parametersObjectIndent + defaultTabSize : lastParameterIndent;
+        // let indentedText = indentMultilineString(newText, newTextIndent);
+        // let insertText = EOL + indentedText;
 
-            // If insertion point is on the same line as the end of the parameters object, then add a newline
-            // afterwards and indent it (e.g. parameters object = empty, {})
-            if (this.getDocumentPosition(insertIndex).line
-                === this.getDocumentPosition(this.parametersObjectValue.span.endIndex).line
-            ) {
-                insertText += EOL + ' '.repeat(defaultTabSize);
-            }
+        // // If insertion point is on the same line as the end of the parameters object, then add a newline
+        // // afterwards and indent it (e.g. parameters object = empty, {})
+        // if (this.getDocumentPosition(insertIndex).line
+        //     === this.getDocumentPosition(this.parametersObjectValue.span.endIndex).line
+        // ) {
+        //     insertText += EOL + ' '.repeat(defaultTabSize);
+        // }
 
-            // Add comma before?
-            let commaEdit = this.createEditToAddCommaBeforePosition(insertIndex);
-            assert(!commaEdit || commaEdit.span.endIndex <= insertIndex);
-            if (commaEdit?.span.startIndex === insertIndex) {
-                // vscode doesn't like both edits starting at the same location, so
-                //   just add the comma directly to the string (this is the common case)
-                commaEdit = undefined;
-                insertText = `,${insertText}`;
-            }
+        // // Add comma before?
+        // let commaEdit = this.createEditToAddCommaBeforePosition(insertIndex);
+        // assert(!commaEdit || commaEdit.span.endIndex <= insertIndex);
+        // if (commaEdit?.span.startIndex === insertIndex) {
+        //     // vscode doesn't like both edits starting at the same location, so
+        //     //   just add the comma directly to the string (this is the common case)
+        //     commaEdit = undefined;
+        //     insertText = `,${insertText}`;
+        // }
 
-            await editor.edit(editBuilder => {
+        // await editor.edit(editBuilder => {
 
-                editBuilder.insert(getVSCodePositionFromPosition(insertPosition), insertText);
-                if (commaEdit) {
-                    editBuilder.replace(
-                        getVSCodeRangeFromSpan(this, commaEdit.span),
-                        commaEdit.insertText);
-                }
-            });
-        }
+        //     editBuilder.insert(getVSCodePositionFromPosition(insertPosition), insertText);
+        //     if (commaEdit) {
+        //         editBuilder.replace(
+        //             getVSCodeRangeFromSpan(this, commaEdit.span),
+        //             commaEdit.insertText);
+        //     }
+        // });
+        //}
     }
 
     public createEditToAddCommaBeforePosition(documentIndex: number): { insertText: string; span: language.Span } | undefined {
@@ -279,15 +235,16 @@ export class DeploymentParameters extends DeploymentDocument implements IProvide
     }
 
     public async getErrorsCore(associatedTemplate: DeploymentTemplate | undefined): Promise<language.Issue[]> {
-        const missingRequiredParams: IParameterDefinition[] = this.getMissingParameters(associatedTemplate, true);
-        if (missingRequiredParams.length === 0) {
-            return [];
-        }
+        //asdf
+        // const missingRequiredParams: IParameterDefinition[] = getMissingParameters(associatedTemplate, true);
+        // if (missingRequiredParams.length === 0) {
+        return [];
+        //  }
 
-        const missingParamNames = missingRequiredParams.map(param => `"${param.nameValue.unquotedValue}"`);
-        const message = `The following parameters do not have default values and require a value in the parameter file: ${missingParamNames.join(', ')}`;
-        const span = this.parametersProperty?.nameValue.span ?? new language.Span(0, 0);
-        return [new language.Issue(span, message, language.IssueKind.params_missingRequiredParam)];
+        // const missingParamNames = missingRequiredParams.map(param => `"${param.nameValue.unquotedValue}"`);
+        // const message = `The following parameters do not have default values and require a value in the parameter file: ${missingParamNames.join(', ')}`;
+        // const span = this.parametersProperty?.nameValue.span ?? new language.Span(0, 0);
+        // return [new language.Issue(span, message, language.IssueKind.params_missingRequiredParam)];
     }
 
     public getWarnings(): language.Issue[] {

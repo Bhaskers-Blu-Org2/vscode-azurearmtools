@@ -18,7 +18,7 @@ import { INamedDefinition } from "./INamedDefinition";
 import * as Json from "./JSON";
 import * as language from "./Language";
 import { DeploymentParameters } from "./parameterFiles/DeploymentParameters";
-import { IParameterValues } from "./parameterFiles/IParameterValues";
+import { IProvideParameterValues } from './parameterFiles/IProvideParameterValues';
 import { ReferenceList } from "./ReferenceList";
 import { isArmSchema } from "./schemas";
 import { TemplatePositionContext } from "./TemplatePositionContext";
@@ -455,12 +455,12 @@ export class DeploymentTemplate extends DeploymentDocument {
         return this.getDocumentText(spanOfValueInsideString, parentStringToken.span.startIndex);
     }
 
-    public getCodeLenses(hasAssociatedParameters: boolean, getParameterValues: () => Promise<IParameterValues>): ResolvableCodeLens[] {
+    public getCodeLenses(hasAssociatedParameters: boolean, getParameterValues: () => Promise<IProvideParameterValues>): ResolvableCodeLens[] {
         return this.getParameterCodeLenses(hasAssociatedParameters, getParameterValues)
             .concat(this.getChildTemplateCodeLenses());
     }
 
-    private getParameterCodeLenses(hasAssociatedParameters: boolean, getParameterValues: () => Promise<IParameterValues>): ResolvableCodeLens[] {
+    private getParameterCodeLenses(hasAssociatedParameters: boolean, getParameterValues: () => Promise<IProvideParameterValues>): ResolvableCodeLens[] {
         if (!ext.configuration.get<boolean>(configKeys.codeLensForParameters)) {
             return [];
         }
@@ -490,7 +490,7 @@ export class DeploymentTemplate extends DeploymentDocument {
         for (const nested of nestedScopes) {
             //asdf find
             lenses.push(...nested.parameterDefinitions.map(pd =>
-                new ParameterDefinitionCodeLens(this, pd, async (): Promise<IParameterValues> => nested.getParameterValues()))); //asdf
+                new ParameterDefinitionCodeLens(this, pd, async (): Promise<IProvideParameterValues> => nested.getParameterValues()))); //asdf
         }
 
         return lenses;
