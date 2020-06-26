@@ -10,6 +10,7 @@ import { templateKeys } from './constants';
 import { IDocumentLocation } from './IDocumentLocation';
 import { IParameterDefinition } from "./IParameterDefinition";
 import { IResource } from './IResource';
+import { IParameterValuesHost } from './parameterFiles/IParameterValuesHost';
 import * as TLE from "./TLE";
 import { UserFunctionDefinition } from './UserFunctionDefinition';
 import { UserFunctionNamespaceDefinition } from "./UserFunctionNamespaceDefinition";
@@ -32,6 +33,7 @@ export abstract class TemplateScope implements IDocumentLocation {
     private _variableDefinitions: CachedValue<IVariableDefinition[] | undefined> = new CachedValue<IVariableDefinition[] | undefined>();
     private _functionDefinitions: CachedValue<UserFunctionNamespaceDefinition[] | undefined> = new CachedValue<UserFunctionNamespaceDefinition[] | undefined>();
     private _resources: CachedValue<IResource[] | undefined> = new CachedValue<IResource[] | undefined>();
+    private _parameterValues: CachedValue<IParameterValuesHost | undefined> = new CachedValue<IParameterValuesHost | undefined>();
 
     constructor(
         public readonly documentUri: Uri,
@@ -70,6 +72,10 @@ export abstract class TemplateScope implements IDocumentLocation {
         return undefined;
     }
 
+    protected getParameterValuesHost(): IParameterValuesHost | undefined { //asdf name?
+        return undefined;
+    }
+
     public get parameterDefinitions(): IParameterDefinition[] {
         return this._parameterDefinitions.getOrCacheValue(() => this.getParameterDefinitions())
             ?? [];
@@ -88,6 +94,10 @@ export abstract class TemplateScope implements IDocumentLocation {
     public get resources(): IResource[] {
         return this._resources.getOrCacheValue(() => this.getResources())
             ?? [];
+    }
+
+    public get parameterValuesHost(): IParameterValuesHost | undefined { //asdf name?
+        return this._parameterValues.getOrCacheValue(() => this.getParameterValuesHost());
     }
 
     public get childScopes(): TemplateScope[] {

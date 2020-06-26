@@ -10,7 +10,7 @@ import { IParameterDefinition } from "./IParameterDefinition";
 import { IResource } from "./IResource";
 import * as Json from "./JSON";
 import { ParameterDefinition } from "./ParameterDefinition";
-import { IProvideParameterValues } from "./parameterFiles/IProvideParameterValues";
+import { IParameterValuesHost } from "./parameterFiles/IParameterValuesHost";
 import { ParameterValueDefinition } from "./parameterFiles/ParameterValueDefinition";
 import { Resource } from "./Resource";
 import { TemplateScope, TemplateScopeKind } from "./TemplateScope";
@@ -248,7 +248,7 @@ export class NestedTemplateInnerScope extends TemplateScopeFromObject {
 
     public readonly scopeKind: TemplateScopeKind = TemplateScopeKind.NestedDeploymentWithInnerScope;
 
-    public getParameterValues(): IProvideParameterValues { //asdf rename?    asdf?
+    public getParameterValuesHost(): IParameterValuesHost { //asdf rename?    asdf?
         return {
             documentUri: this.documentUri,
             //parametersParentDocument: this.deploymentTemplate, //asdf?

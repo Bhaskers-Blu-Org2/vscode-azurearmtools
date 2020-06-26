@@ -9,7 +9,7 @@ import { ResolvableCodeLens } from "./DeploymentDocument";
 import { DeploymentTemplate } from './DeploymentTemplate';
 import { ext } from './extensionVariables';
 import { IParameterDefinition } from './IParameterDefinition';
-import { IProvideParameterValues } from './parameterFiles/IProvideParameterValues';
+import { IParameterValuesHost } from './parameterFiles/IParameterValuesHost';
 import { getRelativeParameterFilePath } from './parameterFiles/parameterFiles';
 import { TemplateScopeKind } from "./TemplateScope";
 
@@ -69,7 +69,7 @@ export class ParameterDefinitionCodeLens extends ResolvableCodeLens {
     public constructor(
         dt: DeploymentTemplate, //asdf doc - this is the parent template, not the parent scope //asdf needed?
         public readonly parameterDefinition: IParameterDefinition,
-        public getParameterValues: () => Promise<IProvideParameterValues | undefined>
+        public getParameterValues: () => Promise<IParameterValuesHost | undefined>
     ) {
         super(dt, parameterDefinition.nameValue.span);
     }

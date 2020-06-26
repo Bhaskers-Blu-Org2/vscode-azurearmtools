@@ -28,7 +28,7 @@ import * as language from "./Language";
 import { startArmLanguageServerInBackground } from "./languageclient/startArmLanguageServer";
 import { DeploymentFileMapping } from "./parameterFiles/DeploymentFileMapping";
 import { DeploymentParameters } from "./parameterFiles/DeploymentParameters";
-import { IProvideParameterValues } from "./parameterFiles/IProvideParameterValues";
+import { IParameterValuesHost } from "./parameterFiles/IParameterValuesHost";
 import { considerQueryingForParameterFile, getFriendlyPathToFile, openParameterFile, openTemplateFile, selectParameterFile } from "./parameterFiles/parameterFiles";
 import { setParameterFileContext } from "./parameterFiles/setParameterFileContext";
 import { IReferenceSite, PositionContext } from "./PositionContext";
@@ -237,7 +237,7 @@ export class AzureRMTools {
         // Code lens commands
         registerCommand(
             "azurerm-vscode-tools.codeLens.gotoParameterValue",
-            async (actionContext: IActionContext, parameterValues: IProvideParameterValues, param: string) => {
+            async (actionContext: IActionContext, parameterValues: IParameterValuesHost, param: string) => {
                 await this.onGotoParameterValue(actionContext, parameterValues, param);
             });
 
@@ -1143,7 +1143,7 @@ export class AzureRMTools {
         return item;
     }
 
-    private async onGotoParameterValue(actionContext: IActionContext, parameterValues: IProvideParameterValues, param: string): Promise<void> {
+    private async onGotoParameterValue(actionContext: IActionContext, parameterValues: IParameterValuesHost, param: string): Promise<void> {
         //asdf bug if click on "using default value"
         const uri = parameterValues.documentUri;
         let textDocument: vscode.TextDocument = await vscode.workspace.openTextDocument(uri);

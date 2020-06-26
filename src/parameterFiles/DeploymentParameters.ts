@@ -13,7 +13,7 @@ import * as Json from "../JSON";
 import * as language from "../Language";
 import { ReferenceList } from "../ReferenceList";
 import { isParametersSchema } from "../schemas";
-import { IProvideParameterValues } from './IProvideParameterValues';
+import { IParameterValuesHost } from './IParameterValuesHost';
 import { ParametersPositionContext } from "./ParametersPositionContext";
 import { ParameterValueDefinition } from "./ParameterValueDefinition";
 import { getParameterValuesCodeActions } from "./ParameterValues";
@@ -21,7 +21,7 @@ import { getParameterValuesCodeActions } from "./ParameterValues";
 /**
  * Represents a deployment parameter file
  */
-export class DeploymentParameters extends DeploymentDocument implements IProvideParameterValues {
+export class DeploymentParameters extends DeploymentDocument implements IParameterValuesHost {
     private _parameterValueDefinitions: CachedValue<ParameterValueDefinition[]> = new CachedValue<ParameterValueDefinition[]>();
     private _parametersProperty: CachedValue<Json.Property | undefined> = new CachedValue<Json.Property | undefined>();
 
@@ -198,40 +198,6 @@ export class DeploymentParameters extends DeploymentDocument implements IProvide
         //     }
         // });
         //}
-    }
-
-    public createEditToAddCommaBeforePosition(documentIndex: number): { insertText: string; span: language.Span } | undefined {
-        // Are there are any parameters before the one being inserted?
-        const newParamIndex = this.parameterValuesDefinitions
-            .filter(
-                p => p.fullSpan.endIndex < documentIndex)
-            .length;
-        if (newParamIndex > 0) {
-            const prevParameter = this.parameterValuesDefinitions[newParamIndex - 1];
-            assert(prevParameter);
-
-            // Is there already a comma after the last parameter?
-            const firstIndexAfterPrev = prevParameter.fullSpan.afterEndIndex;
-            const tokensBetweenParams = this.jsonParseResult.getTokensInSpan(
-                new language.Span(
-                    firstIndexAfterPrev,
-                    documentIndex - firstIndexAfterPrev),
-                Json.Comments.ignoreCommentTokens
-            );
-            if (tokensBetweenParams.some(t => t.type === Json.TokenType.Comma)) {
-                // ... yes
-                return undefined;
-            }
-
-            // Insert a new comma right after last item's full span
-            const insertIndex = prevParameter.fullSpan.afterEndIndex;
-            return {
-                insertText: ',',
-                span: new language.Span(insertIndex, 0)
-            };
-        }
-
-        return undefined;
     }
 
     public async getErrorsCore(associatedTemplate: DeploymentTemplate | undefined): Promise<language.Issue[]> {

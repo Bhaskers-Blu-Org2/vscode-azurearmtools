@@ -11,7 +11,7 @@ import { ParameterValueDefinition } from "./ParameterValueDefinition";
  * which contains parameter values (not definitions) for a template file or
  * linked/nested template
  */
-export interface IProvideParameterValues extends IDocumentLocation/*asdf?*/ {
+export interface IParameterValuesHost extends IDocumentLocation/*asdf?*/ {
     // case-insensitive
     getParameterValue(parameterName: string): ParameterValueDefinition | undefined;
     parameterValuesDefinitions: ParameterValueDefinition[];

@@ -13,6 +13,7 @@ import { IReferenceSite, PositionContext, ReferenceSiteKind } from "../PositionC
 import { ReferenceList } from "../ReferenceList";
 import * as TLE from '../TLE';
 import { DeploymentParameters } from "./DeploymentParameters";
+import { createEditToAddCommaBeforePosition } from './ParameterValues';
 
 const EOL = ext.EOL;
 const newParameterValueSnippetLabel = `new-parameter-value`;
@@ -178,7 +179,10 @@ export class ParametersPositionContext extends PositionContext {
         }
 
         // Comma before?
-        const commaEdit = this.document.createEditToAddCommaBeforePosition(this.documentCharacterIndex);
+        const commaEdit = createEditToAddCommaBeforePosition(
+            this.document,
+            this.document.jsonParseResult,
+            this.documentCharacterIndex);
 
         // Use double quotes around the label if the token is a double-quoted string.
         // That way, the snippet can be used inside or outside of a string, with correct
