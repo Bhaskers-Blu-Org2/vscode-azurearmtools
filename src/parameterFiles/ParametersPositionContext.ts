@@ -55,7 +55,7 @@ export class ParametersPositionContext extends PositionContext {
             return undefined;
         }
 
-        for (let paramValue of this.document.parameterValuesDefinitions) {
+        for (let paramValue of this.document.parameterValueDefinitions) {
             // Are we inside the name of a parameter?
             if (paramValue.nameValue.span.contains(this.documentCharacterIndex, language.Contains.extended)) {
                 // Does it have an associated parameter definition in the template?
@@ -121,7 +121,7 @@ export class ParametersPositionContext extends PositionContext {
     private getCompletionsForMissingParameters(): Completion.Item[] {
         const completions: Completion.Item[] = [];
         if (this._associatedTemplate) {
-            const paramsInParameterFile: string[] = this.document.parameterValuesDefinitions.map(
+            const paramsInParameterFile: string[] = this.document.parameterValueDefinitions.map(
                 pv => pv.nameValue.unquotedValue.toLowerCase());
 
             // For each parameter in the template
@@ -180,7 +180,7 @@ export class ParametersPositionContext extends PositionContext {
 
         // Comma before?
         const commaEdit = createEditToAddCommaBeforePosition(
-            this.document,
+            this.document.parameterValuesSource,
             this.document.jsonParseResult,
             this.documentCharacterIndex);
 
@@ -206,7 +206,7 @@ export class ParametersPositionContext extends PositionContext {
 
     private needsCommaAfterCompletion(): boolean {
         // If there are any parameters after the one being inserted, we need to add a comma after the new one
-        if (this.document.parameterValuesDefinitions.some(p => p.fullSpan.startIndex >= this.documentCharacterIndex)) {
+        if (this.document.parameterValueDefinitions.some(p => p.fullSpan.startIndex >= this.documentCharacterIndex)) {
             return true;
         }
 

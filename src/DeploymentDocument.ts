@@ -5,7 +5,7 @@
 import { CodeAction, CodeActionContext, CodeLens, Command, Range, Selection, Uri } from "vscode";
 import { CachedValue } from "./CachedValue";
 import { __debugMarkPositionInString, __debugMarkRangeInString } from "./debugMarkStrings";
-import { IDocumentLocation } from "./IDocumentLocation";
+import { IJsonDocument } from "./IDocumentLocation";
 import { INamedDefinition } from "./INamedDefinition";
 import * as Json from "./JSON";
 import * as language from "./Language";
@@ -17,7 +17,7 @@ import { getVSCodeRangeFromSpan } from "./util/vscodePosition";
 /**
  * Represents a deployment-related JSON file
  */
-export abstract class DeploymentDocument implements IDocumentLocation {
+export abstract class DeploymentDocument implements IJsonDocument {
     // Parse result for the template JSON document as a whole
     private _jsonParseResult: Json.ParseResult;
 

@@ -110,14 +110,14 @@ suite("DeploymentTemplate code lenses", () => {
         suite("if no parameter file then", () => {
             test("expect only a single parameters section code lens", async () => {
                 const dt = await parseTemplate(template);
-                const lenses = dt.getCodeLenses(false);
+                const lenses = dt.getCodeLenses(false, async () => undefined);
                 assert.equal(lenses.length, 1, "Expecting only a code lens for the parameters section itself");
             });
 
             test("code lens should show command to select/create one", async () => {
                 const dt = await parseTemplate(template);
-                const lenses = dt.getCodeLenses(false);
-                lenses.forEach(lens => lens.resolve(undefined));
+                const lenses = dt.getCodeLenses(false, async () => undefined);
+                lenses.forEach(lens => lens.resolve());
                 assert.equal(stringify(lenses[0].range), stringify(new Range(new Position(3, 2), new Position(63, 3))));
                 assert.equal(lenses[0].command?.title, "Select or create a parameter file to enable full validation...");
                 assert.equal(lenses[0].command?.command, "azurerm-vscode-tools.selectParameterFile");
@@ -131,9 +131,9 @@ suite("DeploymentTemplate code lenses", () => {
             test("parameter section code lens should show command to open current parameter file and one to change the selection", async () => {
                 const dt = await parseTemplate(template);
                 const { dp } = await parseParametersWithMarkers({});
-                const lenses = dt.getCodeLenses(true);
+                const lenses = dt.getCodeLenses(true, async () => dp.parameterValuesSource);
                 assert.equal(lenses.length, 2 + dt.topLevelScope.parameterDefinitions.length);
-                lenses.forEach(lens => lens.resolve(dp));
+                lenses.forEach(lens => lens.resolve());
 
                 const openLens = lenses[0];
                 assert.equal(stringify(openLens.range), stringify(new Range(new Position(3, 2), new Position(63, 3))));
@@ -181,7 +181,7 @@ suite("DeploymentTemplate code lenses", () => {
                                 }
                             }
                         }`);
-                const lenses = dt.getCodeLenses(true)
+                const lenses = dt.getCodeLenses(true, async () => dp.parameterValuesSource)
                     .filter(l => l instanceof ParameterDefinitionCodeLens)
                     .map(l => <ParameterDefinitionCodeLens>l);
                 assert.equal(lenses.length, dt.topLevelScope.parameterDefinitions.length);

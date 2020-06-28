@@ -18,7 +18,7 @@ import { INamedDefinition } from "./INamedDefinition";
 import * as Json from "./JSON";
 import * as language from "./Language";
 import { DeploymentParameters } from "./parameterFiles/DeploymentParameters";
-import { IParameterValuesHost } from './parameterFiles/IParameterValuesHost';
+import { IParameterValuesSource } from './parameterFiles/IParameterValuesSource';
 import { ReferenceList } from "./ReferenceList";
 import { isArmSchema } from "./schemas";
 import { TemplatePositionContext } from "./TemplatePositionContext";
@@ -58,7 +58,7 @@ export class DeploymentTemplate extends DeploymentDocument {
     public get topLevelScope(): TemplateScope {
         return this._topLevelScope.getOrCacheValue(() =>
             new TopLevelTemplateScope(
-                this.documentUri,
+                this, //
                 this.topLevelValue,
                 `Top-level template scope for ${this.documentUri}`
             )
@@ -455,12 +455,13 @@ export class DeploymentTemplate extends DeploymentDocument {
         return this.getDocumentText(spanOfValueInsideString, parentStringToken.span.startIndex);
     }
 
-    public getCodeLenses(hasAssociatedParameters: boolean, getParameterValues: () => Promise<IParameterValuesHost>): ResolvableCodeLens[] {
-        return this.getParameterCodeLenses(hasAssociatedParameters, getParameterValues)
+    // asdf does getParameterValuesSource actually need to be lazy?
+    public getCodeLenses(hasAssociatedParameters: boolean, getParameterValuesSource: () => Promise<IParameterValuesSource | undefined>): ResolvableCodeLens[] {
+        return this.getParameterCodeLenses(hasAssociatedParameters, getParameterValuesSource)
             .concat(this.getChildTemplateCodeLenses());
     }
 
-    private getParameterCodeLenses(hasAssociatedParameters: boolean, getParameterValues: () => Promise<IParameterValuesHost>): ResolvableCodeLens[] {
+    private getParameterCodeLenses(hasAssociatedParameters: boolean, getParameterValuesSource: () => Promise<IParameterValuesSource | undefined>): ResolvableCodeLens[] {
         if (!ext.configuration.get<boolean>(configKeys.codeLensForParameters)) {
             return [];
         }
@@ -482,7 +483,7 @@ export class DeploymentTemplate extends DeploymentDocument {
                 new ParameterDefinitionCodeLens(
                     this,
                     pd,
-                    getParameterValues, //asdf
+                    getParameterValuesSource, //asdf
                 )));
         }
 
@@ -490,7 +491,7 @@ export class DeploymentTemplate extends DeploymentDocument {
         for (const nested of nestedScopes) {
             //asdf find
             lenses.push(...nested.parameterDefinitions.map(pd =>
-                new ParameterDefinitionCodeLens(this, pd, async (): Promise<IParameterValuesHost> => nested.getParameterValuesHost()))); //asdf
+                new ParameterDefinitionCodeLens(this, pd, async (): Promise<IParameterValuesSource | undefined> => nested.parameterValuesSource))); //asdf
         }
 
         return lenses;

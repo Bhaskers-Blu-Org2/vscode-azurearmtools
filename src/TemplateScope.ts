@@ -3,14 +3,13 @@
 // ----------------------------------------------------------------------------
 
 import * as assert from 'assert';
-import { Uri } from 'vscode';
 import { Json, Utilities } from '../extension.bundle';
 import { CachedValue } from './CachedValue';
 import { templateKeys } from './constants';
-import { IDocumentLocation } from './IDocumentLocation';
+import { IJsonDocument } from './IDocumentLocation';
 import { IParameterDefinition } from "./IParameterDefinition";
 import { IResource } from './IResource';
-import { IParameterValuesHost } from './parameterFiles/IParameterValuesHost';
+import { IParameterValuesSource } from './parameterFiles/IParameterValuesSource';
 import * as TLE from "./TLE";
 import { UserFunctionDefinition } from './UserFunctionDefinition';
 import { UserFunctionNamespaceDefinition } from "./UserFunctionNamespaceDefinition";
@@ -28,15 +27,15 @@ export enum TemplateScopeKind {
 /**
  * Represents the scoped access of parameters/variables/functions at a particular point in the template tree.
  */
-export abstract class TemplateScope implements IDocumentLocation {
+export abstract class TemplateScope {
     private _parameterDefinitions: CachedValue<IParameterDefinition[] | undefined> = new CachedValue<IParameterDefinition[] | undefined>();
     private _variableDefinitions: CachedValue<IVariableDefinition[] | undefined> = new CachedValue<IVariableDefinition[] | undefined>();
     private _functionDefinitions: CachedValue<UserFunctionNamespaceDefinition[] | undefined> = new CachedValue<UserFunctionNamespaceDefinition[] | undefined>();
     private _resources: CachedValue<IResource[] | undefined> = new CachedValue<IResource[] | undefined>();
-    private _parameterValues: CachedValue<IParameterValuesHost | undefined> = new CachedValue<IParameterValuesHost | undefined>();
+    private _parameterValues: CachedValue<IParameterValuesSource | undefined> = new CachedValue<IParameterValuesSource | undefined>();
 
     constructor(
-        public readonly documentUri: Uri,
+        public readonly document: IJsonDocument, //asdf?
         public readonly rootObject: Json.ObjectValue | undefined,
         // tslint:disable-next-line:variable-name
         public readonly __debugDisplay: string // Provides context for debugging
@@ -72,7 +71,7 @@ export abstract class TemplateScope implements IDocumentLocation {
         return undefined;
     }
 
-    protected getParameterValuesHost(): IParameterValuesHost | undefined { //asdf name?
+    protected getParameterValuesSource(): IParameterValuesSource | undefined { //asdf name?
         return undefined;
     }
 
@@ -96,8 +95,8 @@ export abstract class TemplateScope implements IDocumentLocation {
             ?? [];
     }
 
-    public get parameterValuesHost(): IParameterValuesHost | undefined { //asdf name?
-        return this._parameterValues.getOrCacheValue(() => this.getParameterValuesHost());
+    public get parameterValuesSource(): IParameterValuesSource | undefined { //asdf name?
+        return this._parameterValues.getOrCacheValue(() => this.getParameterValuesSource());
     }
 
     public get childScopes(): TemplateScope[] {

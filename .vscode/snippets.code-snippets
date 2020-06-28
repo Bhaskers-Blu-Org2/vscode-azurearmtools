@@ -24,5 +24,15 @@
 			"$LINE_COMMENT ----------------------------------------------------------------------------",
 			"",
 		]
+	},
+	"Common Imports": {
+		"prefix": "imports",
+		"body": [
+			"import * as assert from \"assert\";",
+			"import * as vscode from \"vscode\";",
+			"import * as Json from \"./JSON\";",
+			"import * as language from \"./Language\";",
+			"import * as TLE from \"./TLE\";",
+		]
 	}
 }

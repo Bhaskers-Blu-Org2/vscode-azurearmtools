@@ -14,7 +14,7 @@ import { createParameterFromTemplateParameter, defaultTabSize } from "../paramet
 import { TemplateScope } from "../TemplateScope";
 import { indentMultilineString } from "../util/multilineStrings";
 import { getVSCodePositionFromPosition, getVSCodeRangeFromSpan } from "../util/vscodePosition";
-import { IParameterValuesHost } from "./IParameterValuesHost";
+import { IParameterValuesSource } from "./IParameterValuesSource";
 
 // /** asdf
 //  * Represents a "parameters" object in a deployment template or parameter file
@@ -31,7 +31,7 @@ import { IParameterValuesHost } from "./IParameterValuesHost";
 
 // tslint:disable-next-line: export-name asdf
 export async function getParameterValuesCodeActions(
-    parameterValues: IParameterValuesHost, //asdf naming seems weird?
+    parameterValues: IParameterValuesSource, //asdf naming seems weird?
     deploymentTemplate: DeploymentTemplate | undefined, //asdf interface?  scope?  asdf what does undefined mean?
     range: Range | Selection, //asdf what range?
     context: CodeActionContext
@@ -84,7 +84,7 @@ function isParameterRequired(paramDef: IParameterDefinition): boolean {
 
 export function getMissingParameters(
     parameterDefinitions: IParameterDefinition[],
-    parameterValues: IParameterValuesHost,
+    parameterValues: IParameterValuesSource,
     onlyRequiredParameters: boolean
 ): IParameterDefinition[] {
     const results: IParameterDefinition[] = [];
@@ -108,7 +108,7 @@ export async function addMissingParameters(
     //asdf combine these together in an interface? - IParameterValuesHost
     template: DeploymentTemplate, //asdf scope  - need this for docment position - need to add to scope
     scope: TemplateScope,
-    parameterValuesHost: IParameterValuesHost,
+    parameterValuesHost: IParameterValuesSource,
     parametersProperty: Json.Property | undefined,
     jsonParseResult: Json.ParseResult, //asdf?
 
@@ -137,7 +137,7 @@ export async function addMissingParameters(
         const insertPosition = template.getDocumentPosition(insertIndex);
 
         // Find missing params
-        const missingParams: IParameterDefinition[] = template.topLevelScope.parameterValuesHost
+        const missingParams: IParameterDefinition[] = template.topLevelScope.parameterValuesSource
             ? getMissingParameters(
                 scope.parameterDefinitions/*asdf*/,
                 parameterValuesHost, //asdf?
@@ -157,7 +157,7 @@ export async function addMissingParameters(
 
         // Determine indentation
         const parametersObjectIndent = template.getDocumentPosition(parametersProperty?.nameValue.span.startIndex).column;
-        const lastParameter = parameterValuesHost.parameterValuesDefinitions.length > 0 ? parameterValuesHost.parameterValuesDefinitions[parameterValuesHost.parameterValuesDefinitions.length - 1] : undefined;
+        const lastParameter = parameterValuesHost.parameterValueDefinitions.length > 0 ? parameterValuesHost.parameterValueDefinitions[parameterValuesHost.parameterValueDefinitions.length - 1] : undefined;
         const lastParameterIndent = lastParameter ? template.getDocumentPosition(lastParameter?.fullSpan.startIndex).column : undefined;
         const newTextIndent = lastParameterIndent === undefined ? parametersObjectIndent + defaultTabSize : lastParameterIndent;
         let indentedText = indentMultilineString(newText, newTextIndent);
@@ -198,17 +198,17 @@ export async function addMissingParameters(
 }
 
 export function createEditToAddCommaBeforePosition(
-    parameterValuesHost: IParameterValuesHost,
+    parameterValuesHost: IParameterValuesSource,
     jsonParseResult: Json.ParseResult, //asdf? part of host?
     documentIndex: number
 ): { insertText: string; span: language.Span } | undefined {
     // Are there are any parameters before the one being inserted?
-    const newParamIndex = parameterValuesHost.parameterValuesDefinitions
+    const newParamIndex = parameterValuesHost.parameterValueDefinitions
         .filter(
             p => p.fullSpan.endIndex < documentIndex)
         .length;
     if (newParamIndex > 0) {
-        const prevParameter = parameterValuesHost.parameterValuesDefinitions[newParamIndex - 1];
+        const prevParameter = parameterValuesHost.parameterValueDefinitions[newParamIndex - 1];
         assert(prevParameter);
 
         // Is there already a comma after the last parameter?

@@ -12,7 +12,6 @@ import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as vscode from "vscode";
 import { AzureUserInput, callWithTelemetryAndErrorHandling, callWithTelemetryAndErrorHandlingSync, createAzExtOutputChannel, IActionContext, registerCommand, registerUIExtensionVariables, TelemetryProperties } from "vscode-azureextensionui";
-import { Language } from "../extension.bundle";
 import * as Completion from "./Completion";
 import { ConsoleOutputChannelWrapper } from "./ConsoleOutputChannelWrapper";
 import { armTemplateLanguageId, configKeys, configPrefix, expressionsDiagnosticsCompletionMessage, expressionsDiagnosticsSource, globalStateKeys, outputChannelName } from "./constants";
@@ -28,7 +27,7 @@ import * as language from "./Language";
 import { startArmLanguageServerInBackground } from "./languageclient/startArmLanguageServer";
 import { DeploymentFileMapping } from "./parameterFiles/DeploymentFileMapping";
 import { DeploymentParameters } from "./parameterFiles/DeploymentParameters";
-import { IParameterValuesHost } from "./parameterFiles/IParameterValuesHost";
+import { IParameterValuesSource } from "./parameterFiles/IParameterValuesSource";
 import { considerQueryingForParameterFile, getFriendlyPathToFile, openParameterFile, openTemplateFile, selectParameterFile } from "./parameterFiles/parameterFiles";
 import { setParameterFileContext } from "./parameterFiles/setParameterFileContext";
 import { IReferenceSite, PositionContext } from "./PositionContext";
@@ -237,7 +236,7 @@ export class AzureRMTools {
         // Code lens commands
         registerCommand(
             "azurerm-vscode-tools.codeLens.gotoParameterValue",
-            async (actionContext: IActionContext, parameterValues: IParameterValuesHost, param: string) => {
+            async (actionContext: IActionContext, parameterValues: IParameterValuesSource, param: string) => {
                 await this.onGotoParameterValue(actionContext, parameterValues, param);
             });
 
@@ -573,7 +572,7 @@ export class AzureRMTools {
             measurements.parseDurationInMilliseconds = stopwatch.duration.totalMilliseconds;
             measurements.lineCount = parameters.lineCount;
             measurements.maxLineLength = parameters.getMaxLineLength();
-            measurements.paramsCount = parameters.parameterValuesDefinitions.length;
+            measurements.paramsCount = parameters.parameterValueDefinitions.length;
             measurements.commentCount = parameters.getCommentCount();
             measurements.linkedTemplateFiles = this._mapping.getTemplateFile(document.uri) ? 1 : 0;
             measurements.extErrorsCount = errorsWarnings.errors.length;
@@ -1149,9 +1148,9 @@ export class AzureRMTools {
         return item;
     }
 
-    private async onGotoParameterValue(actionContext: IActionContext, parameterValues: IParameterValuesHost, param: string): Promise<void> {
+    private async onGotoParameterValue(actionContext: IActionContext, parameterValues: IParameterValuesSource, param: string): Promise<void> {
         //asdf bug if click on "using default value"
-        const uri = parameterValues.documentUri;
+        const uri = parameterValues.document.documentUri;
         let textDocument: vscode.TextDocument = await vscode.workspace.openTextDocument(uri);
         const editor = await vscode.window.showTextDocument(textDocument);
 
@@ -1161,7 +1160,7 @@ export class AzureRMTools {
             // properties section or beginning of the param file/nested template.
             const span = parameterValues.getParameterValue(param)?.value?.span
                 ?? parameterValues.parametersProperty?.nameValue.span
-                ?? new Language.Span(0, 0);
+                ?? new language.Span(0, 0);
             const range = getVSCodeRangeFromSpan(doc, span);
             editor.selection = new vscode.Selection(range.start, range.end);
             editor.revealRange(range);

@@ -2,11 +2,10 @@
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 // ----------------------------------------------------------------------------
 
-import { Uri } from "vscode";
 import { CachedValue } from "./CachedValue";
 import { templateKeys } from "./constants";
 import { IUsageInfo } from "./Hover";
-import { IDocumentLocation } from "./IDocumentLocation";
+import { IJsonDocument } from "./IDocumentLocation";
 import { DefinitionKind, INamedDefinition } from "./INamedDefinition";
 import * as Json from "./JSON";
 import * as language from "./Language";
@@ -24,7 +23,7 @@ export function isUserFunctionDefinition(definition: INamedDefinition): definiti
 /**
  * This class represents the definition of a user-defined function in a deployment template.
  */
-export class UserFunctionDefinition implements INamedDefinition, IDocumentLocation {
+export class UserFunctionDefinition implements INamedDefinition {
     private readonly _output: CachedValue<OutputDefinition | undefined> = new CachedValue<OutputDefinition | undefined>();
     private readonly _parameterDefinitions: CachedValue<UserFunctionParameterDefinition[]> = new CachedValue<UserFunctionParameterDefinition[]>();
     private readonly _scope: CachedValue<TemplateScope> = new CachedValue<TemplateScope>();
@@ -32,7 +31,7 @@ export class UserFunctionDefinition implements INamedDefinition, IDocumentLocati
     public readonly definitionKind: DefinitionKind = DefinitionKind.UserFunction;
 
     constructor(
-        public readonly documentUri: Uri,
+        public readonly document: IJsonDocument,
         public readonly namespace: UserFunctionNamespaceDefinition,
         public readonly nameValue: Json.StringValue,
         public readonly objectValue: Json.ObjectValue,
@@ -50,7 +49,7 @@ export class UserFunctionDefinition implements INamedDefinition, IDocumentLocati
         return this._scope.getOrCacheValue(() => {
             // Each user function has a scope of its own
             return new UserFunctionScope(
-                this.documentUri,
+                this.document,
                 this.objectValue,
                 this.parameterDefinitions,
                 `'${this.fullName}' (UDF) scope`);

@@ -13,17 +13,19 @@ import * as Json from "../JSON";
 import * as language from "../Language";
 import { ReferenceList } from "../ReferenceList";
 import { isParametersSchema } from "../schemas";
-import { IParameterValuesHost } from './IParameterValuesHost';
+import { IParameterValuesSource, ParameterValuesSource } from './IParameterValuesSource';
 import { ParametersPositionContext } from "./ParametersPositionContext";
 import { ParameterValueDefinition } from "./ParameterValueDefinition";
 import { getParameterValuesCodeActions } from "./ParameterValues";
 
+//asdf should it *have* an IParameterValuesSource rather than be one?
 /**
  * Represents a deployment parameter file
  */
-export class DeploymentParameters extends DeploymentDocument implements IParameterValuesHost {
+export class DeploymentParameters extends DeploymentDocument {
     private _parameterValueDefinitions: CachedValue<ParameterValueDefinition[]> = new CachedValue<ParameterValueDefinition[]>();
     private _parametersProperty: CachedValue<Json.Property | undefined> = new CachedValue<Json.Property | undefined>();
+    private _parameterValuesSource: CachedValue<IParameterValuesSource> = new CachedValue<IParameterValuesSource>();
 
     /**
      * Create a new DeploymentParameters instance
@@ -35,19 +37,25 @@ export class DeploymentParameters extends DeploymentDocument implements IParamet
         super(documentText, documentUri);
     }
 
-    public get parametersContainingDocumentasdf(): DeploymentDocument {
-        return this;
-    }
+    // public get parametersContainingDocumentasdf(): DeploymentDocument {
+    //     return this;
+    // }
 
     public hasParametersSchema(): boolean {
         return isParametersSchema(this.schemaUri);
+    }
+
+    public get parameterValuesSource(): IParameterValuesSource {
+        return this._parameterValuesSource.getOrCacheValue(() => {
+            return new ParameterValuesSource(this, this.parametersProperty);
+        });
     }
 
     // case-insensitive
     public getParameterValue(parameterName: string): ParameterValueDefinition | undefined {
         // Number of parameters generally small, not worth creating a case-insensitive dictionary
         const parameterNameLC = parameterName.toLowerCase();
-        for (let param of this.parameterValuesDefinitions) {
+        for (let param of this.parameterValueDefinitions) {
             if (param.nameValue.unquotedValue.toLowerCase() === parameterNameLC) {
                 return param;
             }
@@ -56,7 +64,7 @@ export class DeploymentParameters extends DeploymentDocument implements IParamet
         return undefined;
     }
 
-    public get parameterValuesDefinitions(): ParameterValueDefinition[] {
+    public get parameterValueDefinitions(): ParameterValueDefinition[] {
         return this._parameterValueDefinitions.getOrCacheValue(() => {
             const parameterDefinitions: ParameterValueDefinition[] = [];
 
@@ -113,7 +121,7 @@ export class DeploymentParameters extends DeploymentDocument implements IParamet
         const template: DeploymentTemplate | undefined = <DeploymentTemplate | undefined>associatedDocument;
 
         return getParameterValuesCodeActions(
-            this,
+            this.parameterValuesSource,
             template,
             range,
             context

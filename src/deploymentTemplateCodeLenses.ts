@@ -9,7 +9,7 @@ import { ResolvableCodeLens } from "./DeploymentDocument";
 import { DeploymentTemplate } from './DeploymentTemplate';
 import { ext } from './extensionVariables';
 import { IParameterDefinition } from './IParameterDefinition';
-import { IParameterValuesHost } from './parameterFiles/IParameterValuesHost';
+import { IParameterValuesSource } from './parameterFiles/IParameterValuesSource';
 import { getRelativeParameterFilePath } from './parameterFiles/parameterFiles';
 import { TemplateScopeKind } from "./TemplateScope";
 
@@ -69,18 +69,18 @@ export class ParameterDefinitionCodeLens extends ResolvableCodeLens {
     public constructor(
         dt: DeploymentTemplate, //asdf doc - this is the parent template, not the parent scope //asdf needed?
         public readonly parameterDefinition: IParameterDefinition,
-        public getParameterValues: () => Promise<IParameterValuesHost | undefined>
+        public getParameterValues: () => Promise<IParameterValuesSource | undefined>
     ) {
         super(dt, parameterDefinition.nameValue.span);
     }
 
     public async resolve(): Promise<boolean> {
-        const parameterValues = await this.getParameterValues();
-        if (parameterValues) {
+        const parameterValuesSource = await this.getParameterValues();
+        if (parameterValuesSource) {
             //assert(parameterValues instanceof DeploymentParameters); asdf
             //const dp = associatedDocument as DeploymentParameters;
 
-            const param = parameterValues.getParameterValue(this.parameterDefinition.nameValue.unquotedValue);
+            const param = parameterValuesSource.getParameterValue(this.parameterDefinition.nameValue.unquotedValue);
             const paramValue = param?.value;
             const paramReference = param?.reference;
             const givenValueAsString = paramValue?.toFullFriendlyString();
@@ -106,7 +106,7 @@ export class ParameterDefinitionCodeLens extends ResolvableCodeLens {
                 title: title,
                 command: "azurerm-vscode-tools.codeLens.gotoParameterValue",
                 arguments: [
-                    parameterValues,
+                    parameterValuesSource,
                     this.parameterDefinition.nameValue.unquotedValue
                 ]
             };
